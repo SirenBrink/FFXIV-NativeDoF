@@ -1,0 +1,27 @@
+[
+  {
+    "Author": "Comfy",
+    "Name": "Native DoF Prototype",
+    "InternalName": "NativeDof",
+    "AssemblyVersion": "0.1.3.0",
+    "Description": "Experimental native gameplay depth of field, with native camera focus or manual focus and aperture controls. Locked to the verified September 15, 2026 game executable. Starts disabled each time. Use /nativedof.",
+    "Punchline": "Native gameplay depth of field — experimental local prototype.",
+    "ApplicableVersion": "2026.09.15.0000.0000",
+    "DalamudApiLevel": 15,
+    "LoadRequiredState": 0,
+    "LoadSync": false,
+    "CanUnloadAsync": false,
+    "Tags": [
+      "camera",
+      "graphics",
+      "dof"
+    ],
+    "DownloadLinkInstall": "https://github.com/SirenBrink/FFXIV-NativeDoF/releases/download/Prototype/NativeDof-0.1.3.zip",
+    "RepoUrl": "https://github.com/SirenBrink/FFXIV-NativeDoF",
+    "DownloadLinkTesting": "https://github.com/SirenBrink/FFXIV-NativeDoF/releases/download/Prototype/NativeDof-0.1.3.zip",
+    "IsHide": false,
+    "IsTestingExclusive": false,
+    "DownloadLinkUpdate": "https://github.com/SirenBrink/FFXIV-NativeDoF/releases/download/Prototype/NativeDof-0.1.3.zip",
+    "LastUpdate": 1790233324
+  }
+]

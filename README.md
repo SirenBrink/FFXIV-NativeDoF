@@ -16,13 +16,20 @@ Gameplay DoF was visually confirmed in 0.1.2. Version 0.1.3 adds first-person su
 
 ## Install
 
-1. Download `NativeDof-0.1.3.zip` from this repository's Releases page.
-2. Extract it into a permanent folder outside the game installation, such as `Documents\NativeDof`.
-3. In FFXIV, open `/xlsettings` → **Experimental** → **Dev Plugin Locations**. Add the full path to the extracted `NativeDof.dll`, then save.
-4. Enable **Native DoF Prototype** in Dalamud's developer plugin list.
+1. In FFXIV, open `/xlsettings` → **Experimental**.
+2. Under **Custom Plugin Repositories**, paste this URL:
+
+   ```text
+   https://raw.githubusercontent.com/SirenBrink/FFXIV-NativeDoF/main/repo.json
+   ```
+
+3. Click **+**, ensure the repository is enabled, then **Save**.
+4. Open `/xlplugins`, search for **Native DoF Prototype**, and click **Install**.
 5. Run `/nativedof` and enable gameplay depth of field.
 
-The effect starts off each time the plugin loads. This release uses developer-plugin loading; there is no custom repository feed or automatic update mechanism yet. Do not put the DLL in the game folder.
+The effect starts off each time the plugin loads. This is a third-party repository shown through Dalamud's in-game plugin installer; it is not part of Dalamud's official plugin repository. The compatibility limits above still apply.
+
+**Already using the developer plugin?** Disable that copy and remove its DLL entry from **Dev Plugin Locations** before installing through the custom repository, so two copies cannot load together. Note your settings before switching.
 
 ## Controls
 
@@ -35,7 +42,7 @@ Use native camera focus to focus at the camera's look-at distance, or set a manu
 
 DoF suspends in first-person and resumes in third-person if enabled. It also suspends during cutscenes, GPose, loading and logout. Combat suspension is enabled by default and can be turned off. Existing native cutscene and GPose settings remain under game control.
 
-For an update, disable the plugin, replace the extracted files, and enable it again. To remove it, disable it and remove its Dev Plugin Location.
+Install future updates through `/xlplugins` when an updated version is published to this feed. To remove the plugin, uninstall it through `/xlplugins`. You can also remove the custom repository from `/xlsettings` afterward.
 
 ## Troubleshooting
 
@@ -54,6 +61,12 @@ In PowerShell, run:
 ```
 
 `-Dotnet` optionally specifies a dotnet executable. The script builds the plugin, runs synthetic-memory checks, and packages it under `release`. Tests cover native layout, input bounds, resource checks and restoration, including exception handling; they do not replace in-game testing.
+
+## Maintaining the repository feed
+
+The root `repo.json` lists the plugin for Dalamud. Its install and update URLs point to the existing `Prototype` release's `NativeDof-0.1.3.zip`. The ZIP must contain `NativeDof.dll` and `NativeDof.json` at its root.
+
+For each future release, upload the new ZIP first, then update the feed's `AssemblyVersion`, download URLs, `LastUpdate` (Unix seconds), and any changed compatibility metadata. Keep `InternalName` as `NativeDof`; the feed's version and API level must match the packaged plugin manifest. Publishing a GitHub release alone does not update this feed. The experimental status is described in the listing; GitHub's pre-release flag does not require users to enable Dalamud testing plugins.
 
 ## Acknowledgements
 
