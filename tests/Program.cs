@@ -11,6 +11,35 @@ unsafe class Program
     }
     static void Main()
     {
+        var close = new CloseFocusPolicy();
+        var backgroundProfile = RenderSettings.Create(true, false, 7, 8, true, 15, 60, 0.35f);
+        Check(close.Select(backgroundProfile, true, 3, 2, 1.4f) == backgroundProfile, "Zoomed out preserves profile");
+        var closeResult = close.Select(backgroundProfile, true, 2, 2, 1.4f);
+        Check(close.Active && closeResult.CameraFocus && !closeResult.Background && closeResult.Aperture == 1.4f,
+            "Close zoom replaces curve with strong native look-at focus");
+        Check(close.Select(backgroundProfile, true, 2.4f, 2, 1.4f).CameraFocus && close.Active, "Close threshold hysteresis");
+        Check(close.Select(backgroundProfile, true, 2.6f, 2, 1.4f) == backgroundProfile && !close.Active, "Zoom out restores original profile");
+        Check(close.Select(backgroundProfile, false, 1, 2, 1.4f) == backgroundProfile, "Unchecked override preserves profile");
+        close.Select(backgroundProfile, true, 1, 2, 1.4f);
+        Check(close.Select(RenderSettings.Off, true, 1, 2, 1.4f) == RenderSettings.Off && !close.Active, "Suspension overrides close focus");
+        Check(close.Select(backgroundProfile, true, float.NaN, 2, 1.4f) == backgroundProfile, "Missing camera preserves profile");
+        Check(close.Select(backgroundProfile, true, 0, 2, 1.4f) == backgroundProfile, "Invalid camera distance rejected");
+        var policy = new ActivationPolicy();
+        var eligible = new ActivationContext(true, true, false, false, false, false, false);
+        Check(policy.Evaluate(eligible, true, false, false, 2, 10) == "Waiting: activation delay", "Enable starts delay");
+        Check(policy.Evaluate(eligible, true, false, false, 2, 11.9) != ActivationPolicy.Active, "Delay not shortened by updates");
+        Check(policy.Evaluate(eligible, true, false, false, 2, 12) == ActivationPolicy.Active, "Delay expires at boundary");
+        Check(policy.Evaluate(eligible with { Combat = true }, true, false, false, 2, 13) == "Suspended: combat", "Combat suspends immediately");
+        Check(policy.Evaluate(eligible, true, false, false, 2, 14) != ActivationPolicy.Active, "Combat exit restarts delay");
+        Check(policy.Evaluate(eligible with { Combat = true }, false, false, false, 2, 16) == ActivationPolicy.Active, "Enabled combat profile does not suspend");
+        Check(policy.Evaluate(eligible with { Duty = true }, false, true, false, 0, 17) == "Suspended: duty", "Duty rule overrides combat permission");
+        Check(policy.Evaluate(eligible with { Mounted = true }, false, false, true, 0, 18) == "Suspended: mounted", "Mount suspension");
+        Check(policy.Evaluate(eligible with { FirstPerson = true }, false, false, false, 0, 19) == "Suspended: first-person camera", "First person always suspends");
+        Check(policy.Evaluate(eligible with { GameBlocked = true }, false, false, false, 0, 20).StartsWith("Suspended: cutscene"), "Game-owned scenes always suspend");
+        Check(policy.Evaluate(eligible with { Enabled = false }, false, false, false, 0, 21) == "Off", "Manual off overrides all rules");
+        Check(policy.Evaluate(eligible with { Available = false }, false, false, false, 0, 22) == "Unavailable", "Unsupported backend cannot activate");
+        Check(policy.Evaluate(eligible, true, true, true, float.NaN, 23) == ActivationPolicy.Active, "Invalid delay repaired");
+        Check(ActivationPolicy.CleanDelay(-1) == 0 && ActivationPolicy.CleanDelay(999) == 30, "Delay bounded");
         Check(Marshal.SizeOf<DofParameters>() == 0x34, "Native parameter size");
         Check((int)Marshal.OffsetOf<DofParameters>(nameof(DofParameters.FocusDistance)) == 0x20, "Focus offset");
         Check((int)Marshal.OffsetOf<DofParameters>(nameof(DofParameters.FNumber)) == 0x24, "Aperture offset");
@@ -31,6 +60,20 @@ unsafe class Program
             Check(parameters->CocDivisor == 33 && parameters->MaskRate == 0.5f, "Native tuning preserved");
         }
         Check(new ReadOnlySpan<byte>(manager, 0x48C0).SequenceEqual(baseline), "Exact restoration and neighboring memory preserved");
+        try
+        {
+            using var scope = new DofOverride((nint)manager, RenderSettings.Create(true, true, 5, 8, true, 15, 60, 0.35f));
+            Check(parameters->ManualCurve == 1 && parameters->NearBlurRate == 0, "Background curve disables foreground blur");
+            Check(parameters->FarFocus == 15 && parameters->FarBlur == 60 && parameters->FarBlurRate == 0.35f,
+                "Background range and strength applied independently of aperture");
+            throw new InvalidOperationException("Simulated curve render failure");
+        }
+        catch (InvalidOperationException) { }
+        Check(new ReadOnlySpan<byte>(manager, 0x48C0).SequenceEqual(baseline), "Curve fields restored on exception");
+        var curve = RenderSettings.Create(true, true, 5, 8, true, 499, float.NaN, float.PositiveInfinity);
+        Check(curve.BlurEnd > curve.BlurStart && curve.Strength == 0.15f, "Non-finite curve inputs repaired without singular range");
+        curve = RenderSettings.Create(true, true, 5, 8, true, 30, 10, 2);
+        Check(curve.BlurEnd == 30.5f && curve.Strength == 1, "Reversed curve range and excessive strength bounded");
         try
         {
             using var scope = new DofOverride((nint)manager, RenderSettings.Create(true, true, 6, 2.8f));
@@ -64,6 +107,6 @@ unsafe class Program
         Check(DofMemory.Ready((nint)manager), "Ready resources accepted");
         *(uint*)(manager + 0x508) = 33;
         Check(!DofMemory.Ready((nint)manager), "Invalid chain rejected");
-        Console.WriteLine($"PASS: {checks} checks (layout, restoration, exception path, input validation, resource gating).");
+        Console.WriteLine($"PASS: {checks} checks (activation transitions, layout, restoration, exception path, input validation, resource gating).");
     }
 }

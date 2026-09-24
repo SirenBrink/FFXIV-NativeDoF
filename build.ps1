@@ -22,5 +22,5 @@ foreach ($name in @('NativeDof.dll','NativeDof.json','NativeDof.deps.json')) {
     Copy-Item -LiteralPath "$PSScriptRoot\src\bin\Release\net10.0-windows\$name" -Destination $release -Force
 }
 Copy-Item -LiteralPath "$PSScriptRoot\README.md" -Destination $release -Force
-Compress-Archive -Path "$release\*" -DestinationPath "$PSScriptRoot\release\NativeDof-0.1.3.zip" -Force
+Compress-Archive -Path "$release\*" -DestinationPath "$PSScriptRoot\release\NativeDof-0.1.6.zip" -Force
 Write-Output "Built and tested: $release\NativeDof.dll"

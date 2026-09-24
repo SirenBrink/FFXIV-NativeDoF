@@ -4,7 +4,7 @@ Experimental Dalamud plugin that enables FFXIV's native updated depth of field d
 
 ## Compatibility
 
-Version **0.1.3**, **Dalamud API 15**, Windows x64. Built against Dalamud 15.0.3.5 and .NET 10.
+Version **0.1.6**, **Dalamud API 15**, Windows x64. Built against Dalamud 15.0.3.5 and .NET 10.
 
 This prototype supports only game build **2026.09.15.0000.0000**, with `ffxiv_dx11.exe` SHA256:
 
@@ -12,7 +12,7 @@ This prototype supports only game build **2026.09.15.0000.0000**, with `ffxiv_dx
 
 Other executables are rejected before native hooks are created. Game updates require fresh analysis and a plugin update. Do not bypass that check.
 
-Gameplay DoF was visually confirmed in 0.1.2. Version 0.1.3 adds first-person suspension; that transition has not yet been confirmed in-game. This remains a prototype. Performance, graphics-mod compatibility, and all transition cases have not been systematically tested.
+Gameplay DoF was visually confirmed in 0.1.2. Version 0.1.6 adds independent combat and out-of-combat profiles, presets, optional saved activation, and additional suspension rules. The background blur and close-up look-at override have been visually confirmed by the author in-game. This remains a prototype. Performance, graphics-mod compatibility, and all transition cases have not been systematically tested.
 
 ## Install
 
@@ -27,7 +27,7 @@ Gameplay DoF was visually confirmed in 0.1.2. Version 0.1.3 adds first-person su
 4. Open `/xlplugins`, search for **Native DoF Prototype**, and click **Install**.
 5. Run `/nativedof` and enable gameplay depth of field.
 
-The effect starts off each time the plugin loads. This is a third-party repository shown through Dalamud's in-game plugin installer; it is not part of Dalamud's official plugin repository. The compatibility limits above still apply.
+The effect starts off by default. In 0.1.6, **Remember enabled state between sessions** optionally restores your last on/off choice. This is a third-party repository shown through Dalamud's in-game plugin installer; it is not part of Dalamud's official plugin repository. The compatibility limits above still apply.
 
 **Already using the developer plugin?** Disable that copy and remove its DLL entry from **Dev Plugin Locations** before installing through the custom repository, so two copies cannot load together. Note your settings before switching.
 
@@ -36,11 +36,21 @@ The effect starts off each time the plugin loads. This is a third-party reposito
 - `/nativedof`: open controls.
 - `/nativedof on`: enable the effect.
 - `/nativedof off`: disable the effect.
+- `/nativedof toggle`: switch the effect on or off without opening the window.
+- `/nativedof subtle`, `balanced`, or `strong`: select an out-of-combat preset without changing activation or the combat profile.
 - `/nativedof status`: open controls and write diagnostics to the Dalamud log.
 
-Use native camera focus to focus at the camera's look-at distance, or set a manual focus distance. Lower aperture values produce more blur; try f/2.8 while standing outdoors in front of a distant background.
+Each profile offers **Background blur curve** or physical camera-focus mode. The background curve controls where blur begins, where it reaches full strength, and its strength from 0–1, with foreground blur disabled. Distances are measured from the camera, not the player. Presets select this mode with distances 15–60 and strengths 0.15 (**Subtle**), 0.35 (**Balanced**), or 0.65 (**Strong**). These experimental values need in-game calibration; they are not measured percentages of visible blur. Increase strength or bring the distances closer for a stronger effect.
 
-DoF suspends in first-person and resumes in third-person if enabled. It also suspends during cutscenes, GPose, loading and logout. Combat suspension is enabled by default and can be turned off. Existing native cutscene and GPose settings remain under game control.
+Uncheck **Background blur curve** for the previous native camera focus or manual focus distance (0.5–500) and aperture (f/1.4–f/32) controls. Physical DoF becomes weak at longer focus distances; the old aperture-only presets proved ineffective for background blur. Ctrl-click a slider to type an exact value. Existing profiles retain their previous mode until you select a new preset or enable the curve.
+
+For background DoF, select **Subtle** in the out-of-combat profile, enable the effect, and optionally enable **Remember enabled state between sessions**. Lower background strength for less blur. Uncheck **Suspend during combat** to reveal independent combat controls. The plugin automatically switches profiles on entering/leaving combat. Existing settings are preserved on upgrade, including the previous combat suspension choice.
+
+DoF always suspends in first-person, cutscenes, GPose, loading and logout. Native cutscene and GPose settings remain under game control. Optional suspension rules cover combat (on by default), duties, and mounting/flying, including riding as a passenger. Duty suspension takes precedence over the combat profile. **Activation delay** (0–30 seconds) waits after enabling or after all suspension rules clear, restarting if another suspension occurs. Suspension and manual off are immediate. The delay is not a fade; switching between two enabled profiles is immediate.
+
+With saved activation enabled, **Turn off now** and `/nativedof off` also save the off state. Temporary suspension does not change your saved choice.
+
+**Focus at look-at point when zoomed in close** optionally overrides either active profile with native look-at focus. It starts unchecked. When checked, defaults are strong f/1.4 aperture and a camera zoom-distance threshold of 2 units; both are adjustable. Zooming beyond the threshold plus 0.5 units restores the selected profile unchanged, avoiding rapid switching near the boundary. This uses the camera's zoom-distance value, not a measurement to the character's model. Off, activation delay, first-person and all suspension rules take priority.
 
 Install future updates through `/xlplugins` when an updated version is published to this feed. To remove the plugin, uninstall it through `/xlplugins`. You can also remove the custom repository from `/xlsettings` afterward.
 
@@ -64,7 +74,7 @@ In PowerShell, run:
 
 ## Maintaining the repository feed
 
-The root `repo.json` lists the plugin for Dalamud. Its install and update URLs point to the existing `Prototype` release's `NativeDof-0.1.3.zip`. The ZIP must contain `NativeDof.dll` and `NativeDof.json` at its root.
+The root `repo.json` lists the plugin for Dalamud. Its install and update URLs point to the `v0.1.6` release's `NativeDof-0.1.6.zip`. The ZIP must contain `NativeDof.dll` and `NativeDof.json` at its root.
 
 For each future release, upload the new ZIP first, then update the feed's `AssemblyVersion`, download URLs, `LastUpdate` (Unix seconds), and any changed compatibility metadata. Keep `InternalName` as `NativeDof`; the feed's version and API level must match the packaged plugin manifest. Publishing a GitHub release alone does not update this feed. The experimental status is described in the listing; GitHub's pre-release flag does not require users to enable Dalamud testing plugins.
 

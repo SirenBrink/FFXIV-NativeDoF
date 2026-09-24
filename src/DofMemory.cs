@@ -24,11 +24,18 @@ internal struct DofParameters
     [FieldOffset(0x30)] public float PreviousRangeScale;
 }
 
-internal sealed record RenderSettings(bool Apply, bool CameraFocus, float Distance, float Aperture)
+internal sealed record RenderSettings(bool Apply, bool CameraFocus, float Distance, float Aperture,
+    bool Background = false, float BlurStart = 15, float BlurEnd = 60, float Strength = 0.15f)
 {
     public static readonly RenderSettings Off = new(false, true, 5, 8);
-    public static RenderSettings Create(bool apply, bool cameraFocus, float distance, float aperture) =>
-        new(apply, cameraFocus, FiniteClamp(distance, 0.5f, 500, 5), FiniteClamp(aperture, 1.4f, 32, 8));
+    public static RenderSettings Create(bool apply, bool cameraFocus, float distance, float aperture,
+        bool background = false, float blurStart = 15, float blurEnd = 60, float strength = 0.15f)
+    {
+        var start = FiniteClamp(blurStart, 1, 499, 15);
+        return new(apply, cameraFocus, FiniteClamp(distance, 0.5f, 500, 5), FiniteClamp(aperture, 1.4f, 32, 8),
+            background, start, FiniteClamp(blurEnd, start + 0.5f, 500, Math.Max(60, start + 0.5f)),
+            FiniteClamp(strength, 0, 1, 0.15f));
+    }
     private static float FiniteClamp(float x, float min, float max, float fallback) =>
         float.IsFinite(x) ? Math.Clamp(x, min, max) : fallback;
 }
@@ -64,6 +71,7 @@ internal unsafe ref struct DofOverride
     private readonly byte* manager;
     private readonly uint originalDofBit;
     private readonly DofParameters saved;
+    private readonly bool background;
 
     public DofOverride(nint address, RenderSettings settings)
     {
@@ -72,8 +80,17 @@ internal unsafe ref struct DofOverride
         var parameters = (DofParameters*)(manager + DofMemory.ParametersOffset);
         originalDofBit = *flags & DofMemory.DofBit;
         saved = *parameters;
+        background = settings.Background;
         parameters->Updated = 1;
-        parameters->ManualCurve = 0;
+        parameters->ManualCurve = background ? (byte)1 : (byte)0;
+        if (background)
+        {
+            parameters->NearFocus = 0.5f;
+            parameters->NearBlurRate = 0;
+            parameters->FarFocus = settings.BlurStart;
+            parameters->FarBlur = settings.BlurEnd;
+            parameters->FarBlurRate = settings.Strength;
+        }
         parameters->OverrideFocus = settings.CameraFocus ? (byte)0 : (byte)1;
         parameters->FocusDistance = settings.Distance;
         parameters->FNumber = settings.Aperture;
@@ -88,6 +105,14 @@ internal unsafe ref struct DofOverride
         parameters->OverrideFocus = saved.OverrideFocus;
         parameters->FocusDistance = saved.FocusDistance;
         parameters->FNumber = saved.FNumber;
+        if (background)
+        {
+            parameters->NearFocus = saved.NearFocus;
+            parameters->NearBlurRate = saved.NearBlurRate;
+            parameters->FarFocus = saved.FarFocus;
+            parameters->FarBlur = saved.FarBlur;
+            parameters->FarBlurRate = saved.FarBlurRate;
+        }
         var flags = (uint*)(manager + DofMemory.FlagsOffset);
         *flags = (*flags & ~DofMemory.DofBit) | originalDofBit;
     }

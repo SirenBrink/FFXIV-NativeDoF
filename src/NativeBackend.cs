@@ -41,6 +41,16 @@ internal sealed unsafe class NativeBackend : IDisposable
     private string status = "Starting";
     [ThreadStatic] private static bool insideOverride;
     public bool Available => hook != null && sceneHook != null;
+    public float CameraDistance
+    {
+        get
+        {
+            if (!Available) return float.NaN;
+            var manager = CameraManager.Instance();
+            var camera = manager == null ? null : manager->Camera;
+            return camera == null ? float.NaN : camera->Distance;
+        }
+    }
     public bool IsFirstPerson
     {
         get
@@ -96,7 +106,7 @@ internal sealed unsafe class NativeBackend : IDisposable
             hook.Enable();
             sceneHook.Enable();
             status = "Verified build; observing renders (effect off)";
-            log.Information("Native DoF 0.1.3: verified scene and render entries; starts OFF. First-person suspension enabled.");
+            log.Information("Native DoF 0.1.6: verified scene and render entries; First-person suspension enabled.");
         }
         catch (Exception ex)
         {
@@ -120,7 +130,8 @@ internal sealed unsafe class NativeBackend : IDisposable
             + $"scenes={Interlocked.Read(ref sceneCalls)}; sceneOverrides={SceneOverrides}; "
             + $"worldFlags=0x{Volatile.Read(ref flagsAtWorldEntry):X}; endFlags=0x{Volatile.Read(ref flagsAtSceneEnd):X}; "
             + $"cocDisabled={CocDisabled}; effectiveFocus={EffectiveFocus:F3}; effectiveAperture={EffectiveAperture:F2}; "
-            + $"cameraFocus={current.CameraFocus}; distance={current.Distance:F2}; aperture={current.Aperture:F2}; status={Status}");
+            + $"cameraFocus={current.CameraFocus}; distance={current.Distance:F2}; aperture={current.Aperture:F2}; "
+            + $"background={current.Background}; blurStart={current.BlurStart:F2}; blurEnd={current.BlurEnd:F2}; strength={current.Strength:F2}; status={Status}");
     }
 
     private void SceneDetour(nint renderer)
