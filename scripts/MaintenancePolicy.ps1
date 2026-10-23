@@ -9,3 +9,13 @@ function Get-MaintenanceDecision($Latest, $Manifest, $State) {
     if ($Latest.assemblyVersion -eq $State.dalamudVersion) { return 'unchanged' }
     return 'rebuild'
 }
+
+function Get-MaintenanceWork($Latest, $Manifest, $State, $Feed, [switch]$ForceCheck) {
+    $decision = Get-MaintenanceDecision $Latest $Manifest $State
+    $pending = [version]$Manifest.AssemblyVersion -gt [version]$Feed.AssemblyVersion
+    [pscustomobject]@{
+        Decision = $decision
+        Needed = [bool]($ForceCheck -or $pending -or $decision -ne 'unchanged')
+        BuildCandidate = [bool]($decision -in @('unchanged', 'rebuild'))
+    }
+}
