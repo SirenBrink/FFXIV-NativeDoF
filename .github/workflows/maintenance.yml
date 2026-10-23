@@ -1,0 +1,41 @@
+name: Monthly compatibility maintenance
+
+on:
+  schedule:
+    - cron: '17 15 1 * *' # First of each month, 15:17 UTC (9:17 CST / 10:17 CDT).
+  workflow_dispatch:
+    inputs:
+      validate_only:
+        description: Build against stable Dalamud without publishing or opening issues
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: native-dof-maintenance
+  cancel-in-progress: false
+
+jobs:
+  maintain:
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test maintenance decisions
+        shell: pwsh
+        run: ./scripts/Test-Maintenance.ps1
+      - name: Check, build and publish compatible revisions
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VALIDATE_ONLY: ${{ inputs.validate_only || false }}
+        run: ./scripts/Maintain.ps1 -ValidateOnly:($env:VALIDATE_ONLY -eq 'true')

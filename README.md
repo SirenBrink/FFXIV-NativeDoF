@@ -78,6 +78,20 @@ In PowerShell, run:
 
 ## Maintaining the repository feed
 
+### Monthly GitHub Actions maintenance
+
+The **Monthly compatibility maintenance** workflow runs on GitHub-hosted Windows runners on the first of each month at **15:17 UTC** (9:17 AM Central Standard Time / 10:17 AM Central Daylight Time). It can also be started from the repository's **Actions** tab. It does not require the author's PC or the Codex app. Select **validate_only** for a build/check run without publishing or opening issues.
+
+The workflow checks the official stable Dalamud metadata, including whether that release supports the current game patch. For a newer compatible Dalamud revision on the same verified game build and API generation, it downloads the references, checks the native structure offsets, builds and runs the tests, increments the plugin version, pushes the source, publishes an experimental GitHub release, verifies the downloaded package, and then updates `repo.json`. It uses GitHub's built-in token; no personal token or AI API key is required. It does not create a release when nothing has changed.
+
+**Game-patch updates still require native verification.** GitHub-hosted runners do not have a licensed FFXIV installation or a new executable to analyze. This workflow does not run a coding agent or automatically reverse-engineer new game patches. A changed game build, API/runtime generation, native layout, or failed build opens or updates a maintenance issue and leaves the existing feed intact. The exact executable hash check is never bypassed. Automated rebuild releases explicitly state that they have not been visually tested in-game.
+
+`maintenance.json` records the last verified Dalamud and game versions. When manually verifying a new game patch, update that file alongside the native addresses, executable hash, manifest and documentation. Repository rules must permit this workflow's token to push to `main` and create releases/issues. Conflicting remote changes stop publication rather than being overwritten. If a run stops after publishing source or a release, rerun it to finish the feed update before starting another version.
+
+GitHub may delay scheduled runs and disables schedules in public repositories after 60 days without repository activity. Monitor the Actions tab and re-enable the schedule if GitHub disables it.
+
+### Feed format
+
 The root `repo.json` lists the plugin for Dalamud. Its install and update URLs point to the `v0.1.8` release's `NativeDof-0.1.8.zip`. The ZIP must contain `NativeDof.dll` and `NativeDof.json` at its root.
 
 For each future release, upload the new ZIP first, then update the feed's `AssemblyVersion`, download URLs, `LastUpdate` (Unix seconds), and any changed compatibility metadata. Keep `InternalName` as `NativeDof`; the feed's version and API level must match the packaged plugin manifest. Publishing a GitHub release alone does not update this feed. The experimental status is described in the listing; GitHub's pre-release flag does not require users to enable Dalamud testing plugins.

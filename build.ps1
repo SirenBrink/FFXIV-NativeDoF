@@ -22,5 +22,9 @@ foreach ($name in @('NativeDof.dll','NativeDof.json','NativeDof.deps.json')) {
     Copy-Item -LiteralPath "$PSScriptRoot\src\bin\Release\net10.0-windows\$name" -Destination $release -Force
 }
 Copy-Item -LiteralPath "$PSScriptRoot\README.md" -Destination $release -Force
-Compress-Archive -Path "$release\*" -DestinationPath "$PSScriptRoot\release\NativeDof-0.1.8.zip" -Force
+$manifest = Get-Content -LiteralPath "$release\NativeDof.json" -Raw | ConvertFrom-Json
+$assemblyVersion = [Reflection.AssemblyName]::GetAssemblyName("$release\NativeDof.dll").Version
+if ($assemblyVersion.ToString() -ne $manifest.AssemblyVersion) { throw 'DLL and manifest versions differ' }
+$packageVersion = $assemblyVersion.ToString(3)
+Compress-Archive -Path "$release\*" -DestinationPath "$PSScriptRoot\release\NativeDof-$packageVersion.zip" -Force
 Write-Output "Built and tested: $release\NativeDof.dll"
