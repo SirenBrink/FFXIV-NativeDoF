@@ -3,10 +3,10 @@
     "Author": "Comfy",
     "Name": "Native DoF Prototype",
     "InternalName": "NativeDof",
-    "AssemblyVersion": "0.1.6.0",
-    "Description": "Experimental native gameplay depth of field, with native camera focus or manual focus and aperture controls. Locked to the verified September 15, 2026 game executable. Optional saved activation and separate combat profiles. Use /nativedof.",
+    "AssemblyVersion": "0.1.8.0",
+    "Description": "Experimental native gameplay depth of field, with native camera focus or manual focus and aperture controls. Locked to the verified October 16, 2026 game executable. Optional saved activation and separate combat profiles. Use /nativedof.",
     "Punchline": "Native gameplay depth of field — experimental local prototype.",
-    "ApplicableVersion": "2026.09.15.0000.0000",
+    "ApplicableVersion": "2026.10.16.0000.0000",
     "DalamudApiLevel": 15,
     "LoadRequiredState": 0,
     "LoadSync": false,
@@ -16,12 +16,12 @@
       "graphics",
       "dof"
     ],
-    "DownloadLinkInstall": "https://github.com/SirenBrink/FFXIV-NativeDoF/releases/download/v0.1.6/NativeDof-0.1.6.zip",
+    "DownloadLinkInstall": "https://github.com/SirenBrink/FFXIV-NativeDoF/releases/download/v0.1.8/NativeDof-0.1.8.zip",
     "RepoUrl": "https://github.com/SirenBrink/FFXIV-NativeDoF",
-    "DownloadLinkTesting": "https://github.com/SirenBrink/FFXIV-NativeDoF/releases/download/v0.1.6/NativeDof-0.1.6.zip",
+    "DownloadLinkTesting": "https://github.com/SirenBrink/FFXIV-NativeDoF/releases/download/v0.1.8/NativeDof-0.1.8.zip",
     "IsHide": false,
     "IsTestingExclusive": false,
-    "DownloadLinkUpdate": "https://github.com/SirenBrink/FFXIV-NativeDoF/releases/download/v0.1.6/NativeDof-0.1.6.zip",
-    "LastUpdate": 1790234959
+    "DownloadLinkUpdate": "https://github.com/SirenBrink/FFXIV-NativeDoF/releases/download/v0.1.8/NativeDof-0.1.8.zip",
+    "LastUpdate": 1792734336
   }
 ]
