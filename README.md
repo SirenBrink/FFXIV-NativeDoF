@@ -4,13 +4,15 @@ Experimental Dalamud plugin that enables FFXIV's native updated depth of field d
 
 ## Compatibility
 
-Version **0.1.6**, **Dalamud API 15**, Windows x64. Built against Dalamud 15.0.3.5 and .NET 10.
+Version **0.1.8**, **Dalamud API 15**, Windows x64. Built against Dalamud 15.0.3.9 and .NET 10.
 
-This prototype supports only game build **2026.09.15.0000.0000**, with `ffxiv_dx11.exe` SHA256:
+This prototype supports only game build **2026.10.16.0000.0000**, with `ffxiv_dx11.exe` SHA256:
 
-`5BBC501DD5C7F22FD61A11D08C25356041D878DB7CD83203ADAE393E4DFACC44`
+`46A52AB1DBE80B9A8D6C4D4531BF66693904200C5135FACACD053EF28A5DE14A`
 
 Other executables are rejected before native hooks are created. Game updates require fresh analysis and a plugin update. Do not bypass that check.
+
+Version 0.1.8 updates the native scene/render addresses and manager pointer for the October 16 game build and compiles against Dalamud 15.0.3.9 (still API 15). DoF layout and scene guards were checked against the updated executable and its bundled FFXIVClientStructs definitions. The build and 46 regression checks pass, and gameplay behavior on this patch has been confirmed in-game.
 
 Gameplay DoF was visually confirmed in 0.1.2. Version 0.1.6 adds independent combat and out-of-combat profiles, presets, optional saved activation, and additional suspension rules. The background blur and close-up look-at override have been visually confirmed by the author in-game. This remains a prototype. Performance, graphics-mod compatibility, and all transition cases have not been systematically tested.
 
@@ -32,6 +34,8 @@ The effect starts off by default. In 0.1.6, **Remember enabled state between ses
 **Already using the developer plugin?** Disable that copy and remove its DLL entry from **Dev Plugin Locations** before installing through the custom repository, so two copies cannot load together. Note your settings before switching.
 
 ## Controls
+
+Version **0.1.8** includes −/+ buttons beside every slider: steps of 0.1 for distances, aperture and delay, and 0.01 for background strength. Buttons snap to the next step in the chosen direction and respect the setting's limits. Ctrl-click still allows exact entry.
 
 - `/nativedof`: open controls.
 - `/nativedof on`: enable the effect.
@@ -67,14 +71,14 @@ Install the .NET 10 SDK and obtain compatible Dalamud API 15 reference libraries
 In PowerShell, run:
 
 ```powershell
-.\build.ps1 -DalamudLibPath 'C:\path\to\Dalamud\Hooks\15.0.3.5'
+.\build.ps1 -DalamudLibPath 'C:\path\to\Dalamud\Hooks\15.0.3.9'
 ```
 
 `-Dotnet` optionally specifies a dotnet executable. The script builds the plugin, runs synthetic-memory checks, and packages it under `release`. Tests cover native layout, input bounds, resource checks and restoration, including exception handling; they do not replace in-game testing.
 
 ## Maintaining the repository feed
 
-The root `repo.json` lists the plugin for Dalamud. Its install and update URLs point to the `v0.1.6` release's `NativeDof-0.1.6.zip`. The ZIP must contain `NativeDof.dll` and `NativeDof.json` at its root.
+The root `repo.json` lists the plugin for Dalamud. Its install and update URLs point to the `v0.1.8` release's `NativeDof-0.1.8.zip`. The ZIP must contain `NativeDof.dll` and `NativeDof.json` at its root.
 
 For each future release, upload the new ZIP first, then update the feed's `AssemblyVersion`, download URLs, `LastUpdate` (Unix seconds), and any changed compatibility metadata. Keep `InternalName` as `NativeDof`; the feed's version and API level must match the packaged plugin manifest. Publishing a GitHub release alone does not update this feed. The experimental status is described in the listing; GitHub's pre-release flag does not require users to enable Dalamud testing plugins.
 

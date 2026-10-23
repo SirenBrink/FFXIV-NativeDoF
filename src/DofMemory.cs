@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace NativeDof;
 
-// Layout checked against ffxiv_dx11.exe SHA256 5BBC501D...4DFACC44.
+// Layout checked against ffxiv_dx11.exe SHA256 46A52AB1...A5DE14A.
 // Field names cross-checked with aers/FFXIVClientStructs, commit
 // 939aa1e1091ec069842ee518d50b6ebd1cabba74 (PostEffectManager).
 [StructLayout(LayoutKind.Explicit, Size = 0x34)]

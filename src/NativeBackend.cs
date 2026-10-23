@@ -10,11 +10,11 @@ namespace NativeDof;
 
 internal sealed unsafe class NativeBackend : IDisposable
 {
-    public const string ExpectedHash = "5BBC501DD5C7F22FD61A11D08C25356041D878DB7CD83203ADAE393E4DFACC44";
+    public const string ExpectedHash = "46A52AB1DBE80B9A8D6C4D4531BF66693904200C5135FACACD053EF28A5DE14A";
     // The frame dispatcher calls native post-effect setup, then rendering.
-    private const int RenderRva = 0x2BABD0;
-    private const int SceneRva = 0x2BA1F0;
-    private const int ManagerGlobalRva = 0x28F6498;
+    private const int RenderRva = 0x2BAD90;
+    private const int SceneRva = 0x2BA3B0;
+    private const int ManagerGlobalRva = 0x290E498;
     private const int MainView = 0x1E;
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate void RenderDelegate(nint renderer, byte drawScene, int view);
@@ -106,7 +106,7 @@ internal sealed unsafe class NativeBackend : IDisposable
             hook.Enable();
             sceneHook.Enable();
             status = "Verified build; observing renders (effect off)";
-            log.Information("Native DoF 0.1.6: verified scene and render entries; First-person suspension enabled.");
+            log.Information("Native DoF 0.1.8: verified scene and render entries; First-person suspension enabled.");
         }
         catch (Exception ex)
         {

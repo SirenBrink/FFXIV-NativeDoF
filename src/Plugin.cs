@@ -204,7 +204,7 @@ public sealed class Plugin : IDalamudPlugin
     private sealed class ControlWindow : Window
     {
         private readonly Plugin owner;
-        public ControlWindow(Plugin plugin) : base("Native DoF Prototype 0.1.6###NativeDof")
+        public ControlWindow(Plugin plugin) : base("Native DoF Prototype 0.1.8###NativeDof")
         {
             owner = plugin;
             Size = new Vector2(560, 540);
@@ -224,8 +224,8 @@ public sealed class Plugin : IDalamudPlugin
             changed |= ImGui.Checkbox("Focus at look-at point when zoomed in close", ref p.config.CloseLookAt);
             if (p.config.CloseLookAt)
             {
-                changed |= ImGui.SliderFloat("Close-up distance", ref p.config.CloseDistance, 0.5f, 10, "%.2f");
-                changed |= ImGui.SliderFloat("Close-up aperture", ref p.config.CloseAperture, 1.4f, 32, "f/%.1f");
+                changed |= StepSlider("Close-up distance", ref p.config.CloseDistance, 0.5f, 10, "%.2f", 0.1f);
+                changed |= StepSlider("Close-up aperture", ref p.config.CloseAperture, 1.4f, 32, "f/%.1f", 0.1f);
                 ImGui.TextWrapped("Temporarily replaces either profile with native look-at focus. Defaults to strong f/1.4 within 2 camera-distance units. Returns to your profile 0.5 units beyond the threshold. Suspension rules still apply.");
             }
             ImGui.Separator();
@@ -242,7 +242,7 @@ public sealed class Plugin : IDalamudPlugin
             ImGui.Separator();
             changed |= ImGui.Checkbox("Suspend inside duties", ref p.config.DisableInDuty);
             changed |= ImGui.Checkbox("Suspend while mounted or flying", ref p.config.DisableWhileMounted);
-            changed |= ImGui.SliderFloat("Activation delay (seconds)", ref p.config.ActivationDelay, 0, 30, "%.1f s");
+            changed |= StepSlider("Activation delay (seconds)", ref p.config.ActivationDelay, 0, 30, "%.1f s", 0.1f);
             ImGui.TextWrapped("Wait this long after enabling or after all suspension rules clear. Suspension is immediate; the delay does not fade the blur.");
             if (changed)
             {
@@ -269,6 +269,36 @@ public sealed class Plugin : IDalamudPlugin
             ImGui.TextWrapped("First test: outdoors, stationary, out of combat. Try f/2.8, then compare on/off while zooming. /nativedof off disables immediately.");
         }
 
+        private static bool StepSlider(string label, ref float value, float min, float max, string format, float step)
+        {
+            ImGui.PushID(label);
+            ImGui.TextUnformatted(label);
+            var buttonSize = ImGui.GetFrameHeight();
+            var spacing = ImGui.GetStyle().ItemSpacing.X;
+            ImGui.SetNextItemWidth(Math.Max(40, ImGui.GetContentRegionAvail().X - 2 * (buttonSize + spacing)));
+            var changed = ImGui.SliderFloat("##value", ref value, min, max, format);
+            ImGui.SameLine();
+            ImGui.BeginDisabled(value <= min);
+            if (ImGui.Button("-", new Vector2(buttonSize, buttonSize)))
+            {
+                value = Math.Clamp((float)Math.Round((Math.Ceiling(value / (double)step - 0.00001) - 1) * step, 6), min, max);
+                changed = true;
+            }
+            ImGui.EndDisabled();
+            if (ImGui.IsItemHovered()) ImGui.SetTooltip($"Decrease by {step:0.##}");
+            ImGui.SameLine();
+            ImGui.BeginDisabled(value >= max);
+            if (ImGui.Button("+", new Vector2(buttonSize, buttonSize)))
+            {
+                value = Math.Clamp((float)Math.Round((Math.Floor(value / (double)step + 0.00001) + 1) * step, 6), min, max);
+                changed = true;
+            }
+            ImGui.EndDisabled();
+            if (ImGui.IsItemHovered()) ImGui.SetTooltip($"Increase by {step:0.##}");
+            ImGui.PopID();
+            return changed;
+        }
+
         private bool DrawProfile(bool combat, ref bool cameraFocus, ref float distance, ref float aperture)
         {
             ImGui.PushID(combat ? "combat" : "exploration");
@@ -284,9 +314,9 @@ public sealed class Plugin : IDalamudPlugin
                 ref var start = ref (combat ? ref owner.config.CombatBlurStart : ref owner.config.BlurStart);
                 ref var end = ref (combat ? ref owner.config.CombatBlurEnd : ref owner.config.BlurEnd);
                 ref var strength = ref (combat ? ref owner.config.CombatStrength : ref owner.config.Strength);
-                changed |= ImGui.SliderFloat("Blur begins at", ref start, 1, 499, "%.1f");
-                changed |= ImGui.SliderFloat("Full blur at", ref end, 1.5f, 500, "%.1f");
-                changed |= ImGui.SliderFloat("Background strength", ref strength, 0, 1, "%.2f");
+                changed |= StepSlider("Blur begins at", ref start, 1, 499, "%.1f", 0.1f);
+                changed |= StepSlider("Full blur at", ref end, start + 0.5f, 500, "%.1f", 0.1f);
+                changed |= StepSlider("Background strength", ref strength, 0, 1, "%.2f", 0.01f);
                 var clean = RenderSettings.Create(false, true, 5, 8, true, start, end, strength);
                 start = clean.BlurStart;
                 end = clean.BlurEnd;
@@ -296,8 +326,8 @@ public sealed class Plugin : IDalamudPlugin
                 return changed;
             }
             changed |= ImGui.Checkbox("Focus at camera look-at point (native)", ref cameraFocus);
-            if (!cameraFocus) changed |= ImGui.SliderFloat("Focus distance", ref distance, 0.5f, 500, "%.2f");
-            changed |= ImGui.SliderFloat("Aperture (lower = more blur)", ref aperture, 1.4f, 32, "f/%.1f");
+            if (!cameraFocus) changed |= StepSlider("Focus distance", ref distance, 0.5f, 500, "%.2f", 0.1f);
+            changed |= StepSlider("Aperture (lower = more blur)", ref aperture, 1.4f, 32, "f/%.1f", 0.1f);
             ImGui.PopID();
             return changed;
         }
